@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: bangladesh-voter-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: voter-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 10
