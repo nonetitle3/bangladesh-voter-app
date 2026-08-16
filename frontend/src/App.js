@@ -36,15 +36,6 @@ export default function App() {
     if (!selectedDivision) { setDistricts([]); return; }
     fetch(`${API}/districts/${selectedDivision}`).then(r => r.json()).then(d => setDistricts(d.districts || []));
     setSelectedDistrict(''); setSelectedUpazila(''); setSelectedUnion(''); setSelectedWard('');
-   useEffect(() => {
-    fetch(`${API}/divisions`).then(r => r.json()).then(d => setDivisions(d.divisions || [])).catch(e => setError('API connection failed'));
-    fetch(`${API}/stats`).then(r => r.json()).then(setStats).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!selectedDivision) { setDistricts([]); return; }
-    fetch(`${API}/districts/${selectedDivision}`).then(r => r.json()).then(d => setDistricts(d.districts || []));
-    setSelectedDistrict(''); setSelectedUpazila(''); setSelectedUnion(''); setSelectedWard('');
   }, [selectedDivision]);
 
   useEffect(() => {
@@ -64,6 +55,15 @@ export default function App() {
     fetch(`${API}/wards/${selectedDivision}/${selectedDistrict}/${selectedUpazila}/${selectedUnion}`).then(r => r.json()).then(d => setWards(d.wards || []));
     setSelectedWard('');
   }, [selectedUnion, selectedUpazila, selectedDistrict, selectedDivision]);
+
+  const handleSearch = useCallback(async () => {
+    setLoading(true); setError(null);
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (selectedDivision) params.set('division', selectedDivision);
+    if (selectedDistrict) params.set('district', selectedDistrict);
+    if (selectedUpazila) params.set('upazila', selectedUpazila);
+    if (selectedUnion) params.set('union', selectedUnion);
     if (selectedWard) params.set('ward', selectedWard);
     if (gender) params.set('gender', gender);
     if (ageFrom) params.set('ageFrom', ageFrom);
