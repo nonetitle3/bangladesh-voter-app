@@ -36,34 +36,34 @@ export default function App() {
     if (!selectedDivision) { setDistricts([]); return; }
     fetch(`${API}/districts/${selectedDivision}`).then(r => r.json()).then(d => setDistricts(d.districts || []));
     setSelectedDistrict(''); setSelectedUpazila(''); setSelectedUnion(''); setSelectedWard('');
+   useEffect(() => {
+    fetch(`${API}/divisions`).then(r => r.json()).then(d => setDivisions(d.divisions || [])).catch(e => setError('API connection failed'));
+    fetch(`${API}/stats`).then(r => r.json()).then(setStats).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!selectedDivision) { setDistricts([]); return; }
+    fetch(`${API}/districts/${selectedDivision}`).then(r => r.json()).then(d => setDistricts(d.districts || []));
+    setSelectedDistrict(''); setSelectedUpazila(''); setSelectedUnion(''); setSelectedWard('');
   }, [selectedDivision]);
 
   useEffect(() => {
     if (!selectedDistrict) { setUpazilas([]); return; }
     fetch(`${API}/upazilas/${selectedDivision}/${selectedDistrict}`).then(r => r.json()).then(d => setUpazilas(d.upazilas || []));
     setSelectedUpazila(''); setSelectedUnion(''); setSelectedWard('');
-  }, [selectedDistrict]);
+  }, [selectedDistrict, selectedDivision]);
 
   useEffect(() => {
     if (!selectedUpazila) { setUnions([]); return; }
     fetch(`${API}/unions/${selectedDivision}/${selectedDistrict}/${selectedUpazila}`).then(r => r.json()).then(d => setUnions(d.unions || []));
     setSelectedUnion(''); setSelectedWard('');
-  }, [selectedUpazila]);
+  }, [selectedUpazila, selectedDistrict, selectedDivision]);
 
   useEffect(() => {
     if (!selectedUnion) { setWards([]); return; }
     fetch(`${API}/wards/${selectedDivision}/${selectedDistrict}/${selectedUpazila}/${selectedUnion}`).then(r => r.json()).then(d => setWards(d.wards || []));
     setSelectedWard('');
-  }, [selectedUnion]);
-
-  const handleSearch = useCallback(async () => {
-    setLoading(true); setError(null);
-    const params = new URLSearchParams();
-    if (searchQuery) params.set('q', searchQuery);
-    if (selectedDivision) params.set('division', selectedDivision);
-    if (selectedDistrict) params.set('district', selectedDistrict);
-    if (selectedUpazila) params.set('upazila', selectedUpazila);
-    if (selectedUnion) params.set('union', selectedUnion);
+  }, [selectedUnion, selectedUpazila, selectedDistrict, selectedDivision]);
     if (selectedWard) params.set('ward', selectedWard);
     if (gender) params.set('gender', gender);
     if (ageFrom) params.set('ageFrom', ageFrom);
