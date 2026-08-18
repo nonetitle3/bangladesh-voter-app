@@ -33,7 +33,7 @@ jobs:
       - name: Build React app
         working-directory: frontend
         env:
-          REACT_APP_API_URL: https://bangladesh-voter-api.onrender.com/api
+          REACT_APP_API_URL: https://bangladesh-voter-app.onrender.com/api
         run: npm run build
 
       - name: Add GitHub Pages SPA fallback
