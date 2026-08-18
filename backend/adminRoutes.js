@@ -13,6 +13,15 @@ const upload = multer({
 
 const previews = new Map();
 
+router.get("/config-status", (req, res) => {
+  res.json({
+    ADMIN_USERNAME: Boolean(process.env.ADMIN_USERNAME),
+    ADMIN_PASSWORD: Boolean(process.env.ADMIN_PASSWORD),
+    ADMIN_PASSWORD_HASH: Boolean(process.env.ADMIN_PASSWORD_HASH),
+    JWT_SECRET: Boolean(process.env.JWT_SECRET)
+  });
+});
+
 router.post("/login", (req, res) => {
   try {
     const token = login(req.body.username, req.body.password);
@@ -45,24 +54,19 @@ router.post("/preview-pdf", requireAdmin, upload.array("files", 100), async (req
   }
   const previewId = crypto.randomUUID();
   previews.set(previewId, { createdAt: Date.now(), voters: [...unique.values()], results });
-  // Keep preview storage bounded and short-lived.
   for (const [id, value] of previews) if (Date.now() - value.createdAt > 15 * 60 * 1000) previews.delete(id);
   res.json({ success: true, previewId, filesProcessed: (req.files || []).length, totalImported: all.length, uniqueVoters: unique.size, duplicates: all.length - unique.size, results });
 });
 
-// Return a small preview for review in the admin UI.
 router.get("/preview/:id", requireAdmin, (req, res) => {
   const item = previews.get(req.params.id);
   if (!item) return res.status(404).json({ error: "Preview expired or not found" });
   res.json({ previewId: req.params.id, results: item.results, voters: item.voters.slice(0, 100) });
 });
 
-// Commit only after the administrator explicitly confirms the preview.
 router.post("/preview/:id/confirm", requireAdmin, (req, res) => {
   const item = previews.get(req.params.id);
   if (!item) return res.status(404).json({ error: "Preview expired or not found" });
-  // Deliberately do not overwrite the existing voter database yet.
-  // The next data-storage step should validate the target hierarchy and write a backup first.
   previews.delete(req.params.id);
   res.json({ success: true, confirmed: true, votersReadyForImport: item.voters.length, message: "Preview confirmed. Database write is intentionally disabled until the target data hierarchy is validated." });
 });
