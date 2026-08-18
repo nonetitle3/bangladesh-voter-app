@@ -36,6 +36,9 @@ jobs:
           REACT_APP_API_URL: https://bangladesh-voter-api.onrender.com/api
         run: npm run build
 
+      - name: Add GitHub Pages SPA fallback
+        run: cp frontend/build/index.html frontend/build/404.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
