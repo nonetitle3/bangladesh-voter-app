@@ -3,6 +3,8 @@ const multer = require("multer");
 const crypto = require("crypto");
 const { login, requireAdmin } = require("./adminAuth");
 const { parsePdf } = require("./pdfImporter");
+const voterRoutes = require("./voterRoutes");
+const { initDatabase } = require("./voterDatabase");
 
 const router = express.Router();
 const upload = multer({
@@ -34,7 +36,15 @@ router.get("/me", requireAdmin, (req, res) =>
   res.json({ authenticated: true, username: req.admin.username, role: req.admin.role })
 );
 
-// Parse PDFs without modifying the live voter database.
+// Database-backed voter routes are mounted under /api/admin so the existing
+// Render deployment does not require a risky server.js replacement.
+router.use(async (req, res, next) => {
+  try { await initDatabase(); next(); }
+  catch (e) { res.status(500).json({ error: "Database initialization failed", detail: e.message }); }
+});
+router.use(voterRoutes);
+
+// Legacy preview endpoints remain available for the existing dashboard.
 router.post("/preview-pdf", requireAdmin, upload.array("files", 100), async (req, res) => {
   const results = [], all = [];
   for (const file of req.files || []) {
