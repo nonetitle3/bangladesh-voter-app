@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const API = process.env.REACT_APP_API_URL || "https://bangladesh-voter-api.onrender.com/api";
+const API = process.env.REACT_APP_API_URL || "https://bangladesh-voter-app.onrender.com/api";
 
 async function readJson(response) {
   const text = await response.text();
