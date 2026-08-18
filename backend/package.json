@@ -1,21 +1,18 @@
 {
   "name": "bangladesh-voter-api",
-  "version": "2.0.0",
-  "description": "Bangladesh Voter Information API - Address-based Search",
+  "version": "3.0.0",
+  "description": "Production-ready Bengali PDF Voter Search API",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
+  "scripts": {"start":"node server.js","dev":"nodemon server.js"},
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.0",
-    "pdf-parse": "^1.1.1"
+    "bcryptjs":"^2.4.3",
+    "cors":"^2.8.5",
+    "express":"^4.18.2",
+    "jsonwebtoken":"^9.0.2",
+    "multer":"^2.0.0",
+    "pdf-parse":"^1.1.1",
+    "sqlite3":"^5.1.7",
+    "tesseract.js":"^6.0.1"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "engines":{"node":">=18.0.0"}
 }
