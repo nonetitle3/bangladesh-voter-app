@@ -1,14 +1,14 @@
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 function login(username, password) {
   const adminUsername = process.env.ADMIN_USERNAME;
-  const hash = process.env.ADMIN_PASSWORD_HASH;
-  if (!adminUsername || !hash || !JWT_SECRET) throw new Error("Admin authentication is not configured");
-  if (username !== adminUsername) return null;
-  if (!bcrypt.compareSync(password, hash)) return null;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminUsername || !adminPassword || !JWT_SECRET) {
+    throw new Error("Admin authentication is not configured");
+  }
+  if (username !== adminUsername || password !== adminPassword) return null;
   return jwt.sign({ username, role: "admin" }, JWT_SECRET, { expiresIn: "8h" });
 }
 
