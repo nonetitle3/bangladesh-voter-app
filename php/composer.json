@@ -1,0 +1,17 @@
+{
+  "name": "nonetitle3/bangladesh-voter-API",
+  "description": "Bangladesh Voter Search and PDF Administration API (PHP/MySQL)",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*",
+    "ext-mbstring": "*",
+    "ext-fileinfo": "*",
+    "firebase/php-jwt": "^6.11",
+    "smalot/pdfparser": "^2.12",
+    "phpoffice/phpspreadsheet": "^2.2"
+  },
+  "autoload": { "psr-4": { "VoterApp\\": "src/" } },
+  "config": { "optimize-autoloader": true, "sort-packages": true }
+}
