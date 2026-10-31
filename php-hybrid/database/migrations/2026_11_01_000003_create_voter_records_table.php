@@ -32,9 +32,6 @@ return new class extends Migration {
    $table->timestamp('updated_at')->nullable();
    $table->foreign('document_id')->references('id')->on('documents')->nullOnDelete();
    $table->index('voter_id');
-   $table->index(['name','father_name'], 'voter_name_father_idx');
-   $table->index(['district','upazila'], 'voter_location_idx');
-   $table->index(['division','district','upazila'], 'voter_admin_area_idx');
    $table->index(['document_id','page_number'], 'voter_source_page_idx');
   });
  }
