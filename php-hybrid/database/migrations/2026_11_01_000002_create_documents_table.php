@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
  public function up(): void {
   Schema::create('documents', function (Blueprint $table) {
-   $table->unsignedBigInteger('id')->autoIncrement();
+   $table->unsignedBigInteger('id')->autoIncrement()->primary();
    $table->string('filename');
    $table->text('stored_path')->nullable();
    $table->unsignedInteger('page_count')->default(0);
