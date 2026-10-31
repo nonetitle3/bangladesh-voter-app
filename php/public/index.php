@@ -32,7 +32,7 @@ try {
         $valid = hash_equals($admin, $username) && ($plain ? hash_equals($plain, $password) : password_verify($password, $hash));
         if (!$valid) json_response(['error'=>'Invalid username or password'], 401);
         $now = time();
-        $token = Firebase\\JWT\\JWT::encode(['iat'=>$now,'exp'=>$now+28800,'username'=>$username,'role'=>'admin'], $secret, 'HS256');
+        $token = Firebase\JWT\JWT::encode(['iat'=>$now,'exp'=>$now+28800,'username'=>$username,'role'=>'admin'], $secret, 'HS256');
         json_response(['success'=>true,'token'=>$token]);
     }
     if ($path === '/api/admin/me') json_response(['authenticated'=>true] + require_admin());
