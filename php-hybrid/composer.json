@@ -5,8 +5,7 @@
   "require": {
     "php": "^8.3",
     "laravel/framework": "^12.0",
-    "firebase/php-jwt": "^7.2.1",
-    "phpoffice/phpspreadsheet": "^2.2"
+    "firebase/php-jwt": "^7.2.1"
   },
   "require-dev": {},
   "autoload": {
@@ -26,7 +25,9 @@
     "optimize-autoloader": true,
     "preferred-install": "dist",
     "sort-packages": true,
-    "allow-plugins": {"php-http/discovery": true}
+    "allow-plugins": {
+      "php-http/discovery": true
+    }
   },
   "minimum-stability": "stable",
   "prefer-stable": true
