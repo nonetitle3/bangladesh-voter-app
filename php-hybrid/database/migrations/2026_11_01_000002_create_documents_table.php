@@ -9,9 +9,9 @@ return new class extends Migration {
    $table->unsignedBigInteger('id')->autoIncrement()->primary();
    $table->string('filename');
    $table->text('stored_path')->nullable();
-   $table->unsignedInteger('page_count')->default(0);
+   $table->unsignedInteger('page_count')->nullable()->default(0);
    $table->string('status',30)->default('pending')->index();
-   $table->boolean('ocr_used')->default(false);
+   $table->boolean('ocr_used')->nullable()->default(false);
    $table->text('error_msg')->nullable();
    $table->timestamp('uploaded_at')->nullable()->index();
    $table->timestamps();
