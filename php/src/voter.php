@@ -92,7 +92,7 @@ function voter_filter(array $q): array {
     return [$where?' WHERE '.implode(' AND ',$where):'',$values];
 }
 function parse_pdf_records(string $file, string $filename): array {
-    $parser=new Smalot\\PdfParser\\Parser();$pdf=$parser->parseFile($file);$text=$pdf->getText();$pages=$pdf->getPages();$ocr=false;
+    $parser=new Smalot\PdfParser\Parser();$pdf=$parser->parseFile($file);$text=$pdf->getText();$pages=$pdf->getPages();$ocr=false;
     if (mb_strlen(trim($text)) < 25 && function_exists('exec')) {
         $prefix=tempnam(sys_get_temp_dir(),'voterpdf');@unlink($prefix);
         exec('pdftoppm -f 1 -l 30 -r 250 -png '.escapeshellarg($file).' '.escapeshellarg($prefix).' 2>/dev/null');
@@ -100,11 +100,11 @@ function parse_pdf_records(string $file, string $filename): array {
         $ocr=true;
     }
     $records=[];$bn='০১২৩৪৫৬৭৮৯';
-    preg_match_all('/(?:^|\\n)\\s*([০-৯0-9]{1,6})\\.\\s*নাম\\s*:/u',$text,$matches,PREG_OFFSET_CAPTURE);
+    preg_match_all('/(?:^|\n)\s*([০-৯0-9]{1,6})\.\s*নাম\s*:/u',$text,$matches,PREG_OFFSET_CAPTURE);
     $starts=$matches[0]??[];
     for($i=0;$i<count($starts);$i++){
       $offset=$starts[$i][1];$block=substr($text,$offset,$i+1<count($starts)?$starts[$i+1][1]-$offset:strlen($text));
-      $field=function(string $label,array $next=[])use($block){$end=$next?'(?='.implode('|',array_map(fn($x)=>preg_quote($x,'/'),$next)).'|$)':'$';if(preg_match('/'.preg_quote($label,'/').'\\s*:\\s*(.*?)'.$end.'/isu',$block,$m))return clean_text($m[1]);return '';};
+      $field=function(string $label,array $next=[])use($block){$end=$next?'(?='.implode('|',array_map(fn($x)=>preg_quote($x,'/'),$next)).'|$)':'$';if(preg_match('/'.preg_quote($label,'/').'\s*:\s*(.*?)'.$end.'/isu',$block,$m))return clean_text($m[1]);return '';};
       $serial=bn_digits($matches[1][$i][0]??'');
       $records[]=['serial_no'=>$serial,'voter_id'=>bn_digits($field('ভোটার নং',['পিতা'])),'name'=>$field('নাম',['ভোটার নং']),'father_name'=>$field('পিতা',['মাতা']),'mother_name'=>$field('মাতা',['পেশা','জন্ম তারিখ']),'occupation'=>$field('পেশা',['জন্ম তারিখ']),'birth_date'=>bn_digits($field('জন্ম তারিখ',['ঠিকানা'])),'address'=>$field('ঠিকানা'),'pdf_filename'=>$filename,'raw_text'=>$block,'confidence'=>$ocr?0.55:0.9];
     }
@@ -145,7 +145,7 @@ function admin_route(string $path,string $method): never {
     if(($path==='/api/admin/export/csv'||$path==='/api/admin/export/excel')&&$method==='GET'){
       [$where,$vals]=voter_filter($_GET);$st=db()->prepare('SELECT voter_id,serial_no,name,father_name,mother_name,birth_date,gender,occupation,address,village,ward,union_name,upazila,district,division,post_code,pdf_filename,page_number FROM voter_records'.$where.' ORDER BY id DESC');$st->execute($vals);$rows=$st->fetchAll();
       if(str_ends_with($path,'/csv')){header('Content-Type: text/csv; charset=utf-8');header('Content-Disposition: attachment; filename="voter-records.csv"');echo "\xEF\xBB\xBF";$out=fopen('php://output','w');if($rows)fputcsv($out,array_keys($rows[0]));foreach($rows as $r)fputcsv($out,$r);fclose($out);exit;}
-      header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');header('Content-Disposition: attachment; filename="voter-records.xlsx"');$book=new PhpOffice\\PhpSpreadsheet\\Spreadsheet();$sheet=$book->getActiveSheet();if($rows){$sheet->fromArray(array_keys($rows[0]),null,'A1');$sheet->fromArray($rows,null,'A2');}$writer=new PhpOffice\\PhpSpreadsheet\\Writer\\Xlsx($book);$writer->save('php://output');exit;
+      header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');header('Content-Disposition: attachment; filename="voter-records.xlsx"');$book=new PhpOffice\PhpSpreadsheet\Spreadsheet();$sheet=$book->getActiveSheet();if($rows){$sheet->fromArray(array_keys($rows[0]),null,'A1');$sheet->fromArray($rows,null,'A2');}$writer=new PhpOffice\PhpSpreadsheet\Writer\Xlsx($book);$writer->save('php://output');exit;
     }
     json_response(['error'=>'Admin endpoint not found'],404);
 }
