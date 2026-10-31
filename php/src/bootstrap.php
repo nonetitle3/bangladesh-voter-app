@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use Firebase\\JWT\\JWT;
-use Firebase\\JWT\\Key;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -40,7 +40,7 @@ function body_json(): array {
 }
 function bearer_token(): ?string {
     $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    return preg_match('/^Bearer\\s+(.+)$/i', $header, $m) ? trim($m[1]) : null;
+    return preg_match('/^Bearer\s+(.+)$/i', $header, $m) ? trim($m[1]) : null;
 }
 function admin_user(): ?array {
     $token = bearer_token();
@@ -59,7 +59,7 @@ function require_admin(): array {
 }
 function clean_text(string $s): string {
     $s = str_replace("\xc2\xa0", ' ', $s);
-    return trim(preg_replace('/[ \\t]+/u', ' ', $s) ?? $s);
+    return trim(preg_replace('/[ \t]+/u', ' ', $s) ?? $s);
 }
 function bn_digits(string $s): string {
     return strtr($s, ['০'=>'0','১'=>'1','২'=>'2','৩'=>'3','৪'=>'4','৫'=>'5','৬'=>'6','৭'=>'7','৮'=>'8','৯'=>'9']);
