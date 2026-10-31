@@ -19,7 +19,7 @@ class AdminAuthController {
         $hash = (string) env('ADMIN_PASSWORD_HASH', '');
         $secret = (string) env('JWT_SECRET', '');
         if ($username === '' || $secret === '' || ($plain === '' && $hash === '')) {
-            return response()->json(['error' => 'Admin authentication is not configured'], 503);
+            return response()->json(['error' => 'Admin authentication is not configured'], 500);
         }
         $validPassword = $plain !== '' ? hash_equals($plain, $data['password']) : password_verify($data['password'], $hash);
         if (!hash_equals($username, $data['username']) || !$validPassword) {
