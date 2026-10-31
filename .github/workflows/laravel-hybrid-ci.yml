@@ -29,6 +29,8 @@ jobs:
           php-version: '8.3'
           extensions: mbstring, pdo_mysql, pdo_sqlite, sqlite3, gd, zip, xml
           coverage: none
+      - name: Prepare Laravel writable directories
+        run: mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs
       - uses: ramsey/composer-install@v3
         with:
           working-directory: php-hybrid
