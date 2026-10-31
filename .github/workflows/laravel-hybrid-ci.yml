@@ -1,0 +1,124 @@
+name: Laravel Hybrid CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+    paths:
+      - 'php-hybrid/**'
+      - 'scripts/backup_legacy_voter_data.py'
+      - 'docs/migration/**'
+      - '.github/workflows/laravel-hybrid-ci.yml'
+  push:
+    branches: [laravel-hybrid-migration]
+    paths:
+      - 'php-hybrid/**'
+      - 'scripts/backup_legacy_voter_data.py'
+      - '.github/workflows/laravel-hybrid-ci.yml'
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: voter_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    defaults:
+      run:
+        working-directory: php-hybrid
+    env:
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: voter_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      ADMIN_USERNAME: ci-admin
+      ADMIN_PASSWORD: ci-password
+      JWT_SECRET: ci-only-secret-not-for-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, pdo_sqlite, sqlite3, gd, zip, xml
+          coverage: none
+      - name: Prepare Laravel writable directories
+        run: mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: php-hybrid
+      - name: Validate Composer manifest
+        run: composer validate --strict
+      - name: PHP syntax check
+        run: find . -path './vendor' -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Boot Laravel and list routes
+        run: php artisan route:list --path=api
+      - name: Apply MySQL migrations
+        run: php artisan migrate --force
+      - name: Create legacy SQLite fixture
+        run: |
+          python - <<'PY'
+          import sqlite3
+          p='/tmp/voters.sqlite'
+          db=sqlite3.connect(p)
+          db.executescript("""
+          CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT, password TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'viewer', is_active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL);
+          CREATE TABLE documents (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL, stored_path TEXT, page_count INTEGER DEFAULT 0, status TEXT NOT NULL DEFAULT 'pending', ocr_used INTEGER DEFAULT 0, error_msg TEXT, uploaded_at TEXT NOT NULL);
+          CREATE TABLE voter_records (id INTEGER PRIMARY KEY AUTOINCREMENT, document_id INTEGER, voter_id TEXT, serial_no TEXT, name TEXT, father_name TEXT, mother_name TEXT, birth_date TEXT, gender TEXT, occupation TEXT, address TEXT, village TEXT, ward TEXT, union_name TEXT, upazila TEXT, district TEXT, division TEXT, post_code TEXT, pdf_filename TEXT, page_number INTEGER, raw_text TEXT, confidence REAL DEFAULT 0, created_at TEXT NOT NULL);
+          INSERT INTO users VALUES (7,'admin',NULL,'$2y$10$legacy-hash','admin',1,'2026-01-01T00:00:00Z');
+          INSERT INTO documents VALUES (12,'sample.pdf','pdfs/sample.pdf',1,'completed',0,NULL,'2026-01-01T00:00:00Z');
+          INSERT INTO voter_records (id,document_id,voter_id,name,father_name,district,raw_text,created_at) VALUES (44,12,'1234567890','বাংলা নাম','পিতার নাম','ময়মনসিংহ','মূল বাংলা পাঠ','2026-01-01T00:00:00Z');
+          """)
+          db.commit()
+          db.close()
+          PY
+      - name: Import fixture into MySQL and verify parity
+        run: |
+          php artisan voters:import-sqlite /tmp/voters.sqlite
+          php artisan voters:import-sqlite /tmp/voters.sqlite --execute
+          php artisan voters:verify-sqlite /tmp/voters.sqlite
+  backup-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile backup utility
+        run: python -m py_compile scripts/backup_legacy_voter_data.py
+      - name: Backup utility integration test
+        run: |
+          mkdir -p /tmp/legacy/backend/storage /tmp/legacy/backend/data /tmp/legacy/backend/storage/pdfs
+          python - <<'PY'
+          import sqlite3
+          p='/tmp/legacy/backend/storage/voters.sqlite'
+          db=sqlite3.connect(p)
+          db.executescript("""
+          CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, email TEXT, password TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'viewer', is_active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL);
+          CREATE TABLE documents (id INTEGER PRIMARY KEY, filename TEXT NOT NULL, stored_path TEXT, page_count INTEGER DEFAULT 0, status TEXT NOT NULL DEFAULT 'pending', ocr_used INTEGER DEFAULT 0, error_msg TEXT, uploaded_at TEXT NOT NULL);
+          CREATE TABLE voter_records (id INTEGER PRIMARY KEY, document_id INTEGER, voter_id TEXT, serial_no TEXT, name TEXT, father_name TEXT, mother_name TEXT, birth_date TEXT, gender TEXT, occupation TEXT, address TEXT, village TEXT, ward TEXT, union_name TEXT, upazila TEXT, district TEXT, division TEXT, post_code TEXT, pdf_filename TEXT, page_number INTEGER, raw_text TEXT, confidence REAL DEFAULT 0, created_at TEXT NOT NULL);
+          INSERT INTO users VALUES (1,'admin',NULL,'hash','admin',1,'2026-01-01');
+          INSERT INTO documents VALUES (1,'sample.pdf','pdfs/sample.pdf',1,'completed',0,NULL,'2026-01-01');
+          INSERT INTO voter_records (id,document_id,name,created_at) VALUES (1,1,'বাংলা নাম','2026-01-01');
+          """)
+          db.commit()
+          db.close()
+          open('/tmp/legacy/backend/storage/pdfs/sample.pdf','wb').write(b'pdf-sample')
+          open('/tmp/legacy/backend/data/hierarchy.json','w',encoding='utf8').write('{"name":"বাংলাদেশ"}')
+          PY
+          python scripts/backup_legacy_voter_data.py --sqlite /tmp/legacy/backend/storage/voters.sqlite --pdf-dir /tmp/legacy/backend/storage/pdfs --json-dir /tmp/legacy/backend/data --output /tmp/backups
+          test -f /tmp/backups/*/manifest.json
+          test -f /tmp/backups/*/voters.sqlite
