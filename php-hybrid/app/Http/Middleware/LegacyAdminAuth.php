@@ -1,16 +1,16 @@
 <?php
-namespace App\\Http\\Middleware;
+namespace App\Http\Middleware;
 use Closure;
-use Firebase\\JWT\\JWT;
-use Firebase\\JWT\\Key;
-use Illuminate\\Http\\Request;
-use Symfony\\Component\\HttpFoundation\\Response;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class LegacyAdminAuth {
     public function handle(Request $request, Closure $next): Response {
         $header = $request->header('Authorization', '');
         $secret = (string) env('JWT_SECRET', '');
-        if (!preg_match('/^Bearer\\s+(.+)$/i', $header, $m) || $secret === '') {
+        if (!preg_match('/^Bearer\s+(.+)$/i', $header, $m) || $secret === '') {
             return response()->json(['error' => 'Authentication required'], 401);
         }
         try {
@@ -22,7 +22,7 @@ class LegacyAdminAuth {
                 'username' => $claims->username ?? 'admin',
                 'role' => $claims->role,
             ]);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             return response()->json(['error' => 'Invalid or expired token'], 401);
         }
         return $next($request);
