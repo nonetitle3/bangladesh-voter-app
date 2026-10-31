@@ -12,7 +12,7 @@ return new class extends Migration {
    $table->string('password');
    $table->string('role',30)->default('viewer')->index();
    $table->boolean('is_active')->default(true)->index();
-   $table->timestamp('created_at')->nullable();
+   $table->text('created_at')->nullable();
    $table->timestamp('updated_at')->nullable();
   });
  }
