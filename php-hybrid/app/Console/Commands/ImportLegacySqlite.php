@@ -82,6 +82,18 @@ class ImportLegacySqlite extends Command
                         foreach ($rows as $row) {
                             $existing = DB::table($table)->where('id', $row['id'])->first();
                             if ($existing) {
+                                $current = (array)$existing;
+                                foreach ($row as $column => $value) {
+                                    $actual = $current[$column] ?? null;
+                                    if ($value === null && $actual === null) continue;
+                                    if (is_numeric($value) && is_numeric($actual)) {
+                                        if (abs((float)$value - (float)$actual) > 0.00001) {
+                                            throw new RuntimeException("Conflicting existing {$table}.{$column} at id {$row['id']}; refusing to overwrite.");
+                                        }
+                                    } elseif ((string)$value !== (string)$actual) {
+                                        throw new RuntimeException("Conflicting existing {$table}.{$column} at id {$row['id']}; refusing to overwrite.");
+                                    }
+                                }
                                 $skipped++;
                                 continue;
                             }
