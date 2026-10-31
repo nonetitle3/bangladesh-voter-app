@@ -27,8 +27,8 @@ return new class extends Migration {
    $table->text('pdf_filename')->nullable();
    $table->unsignedInteger('page_number')->nullable();
    $table->longText('raw_text')->nullable();
-   $table->decimal('confidence',7,4)->nullable()->default(0);
-   $table->timestamp('created_at')->nullable();
+   $table->double('confidence')->nullable()->default(0);
+   $table->text('created_at')->nullable();
    $table->timestamp('updated_at')->nullable();
    $table->foreign('document_id')->references('id')->on('documents')->nullOnDelete();
    $table->index('voter_id');
