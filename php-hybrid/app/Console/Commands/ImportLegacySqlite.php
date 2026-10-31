@@ -51,9 +51,17 @@ class ImportLegacySqlite extends Command
             foreach ($this->tables as $table => $columns) {
                 $exists = $sqlite->query("SELECT name FROM sqlite_master WHERE type='table' AND name=".$sqlite->quote($table))->fetchColumn();
                 if (!$exists) throw new RuntimeException("Required source table missing: {$table}");
+                $sourceInfo = $sqlite->query("PRAGMA table_info(\"{$table}\")")->fetchAll(PDO::FETCH_ASSOC);
+                $sourceColumns = array_column($sourceInfo, 'name');
+                $missingColumns = array_values(array_diff($columns, $sourceColumns));
+                $extraColumns = array_values(array_diff($sourceColumns, $columns));
+                if ($missingColumns) throw new RuntimeException("Source {$table} is missing mapped columns: ".implode(',', $missingColumns));
+                if ($extraColumns) throw new RuntimeException("Unmapped source columns found in {$table}: ".implode(',', $extraColumns).". Add explicit MySQL mappings before importing; refusing to silently drop data.");
                 $counts[$table] = (int)$sqlite->query("SELECT COUNT(*) FROM \"{$table}\"")->fetchColumn();
                 $this->line("{$table}: {$counts[$table]} source rows");
             }
+            $orphans = (int)$sqlite->query('SELECT COUNT(*) FROM voter_records vr LEFT JOIN documents d ON d.id=vr.document_id WHERE vr.document_id IS NOT NULL AND d.id IS NULL')->fetchColumn();
+            if ($orphans > 0) throw new RuntimeException("Source has {$orphans} voter_records with missing documents; repair/mapping review is required before import.");
             if (!$this->option('execute')) {
                 $this->comment('Dry run only. No destination rows were written. Re-run with --execute after reviewing backups and counts.');
                 return self::SUCCESS;
