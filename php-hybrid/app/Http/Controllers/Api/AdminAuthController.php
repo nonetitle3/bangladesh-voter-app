@@ -1,7 +1,7 @@
 <?php
-namespace App\\Http\\Controllers\\Api;
-use Firebase\\JWT\\JWT;
-use Illuminate\\Http\\Request;
+namespace App\Http\Controllers\Api;
+use Firebase\JWT\JWT;
+use Illuminate\Http\Request;
 
 class AdminAuthController {
     public function configStatus() {
