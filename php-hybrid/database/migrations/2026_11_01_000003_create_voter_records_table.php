@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
  public function up(): void {
   Schema::create('voter_records', function (Blueprint $table) {
-   $table->unsignedBigInteger('id')->autoIncrement();
+   $table->unsignedBigInteger('id')->autoIncrement()->primary();
    $table->unsignedBigInteger('document_id')->nullable();
    $table->string('voter_id',100)->nullable();
    $table->string('serial_no',100)->nullable();
