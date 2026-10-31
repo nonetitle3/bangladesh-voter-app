@@ -122,7 +122,7 @@ function admin_route(string $path,string $method): never {
       $count=$pdo->prepare('SELECT COUNT(*) FROM voter_records'.$where);$count->execute($vals);$stmt=$pdo->prepare('SELECT * FROM voter_records'.$where.' ORDER BY id DESC LIMIT ? OFFSET ?');foreach($vals as $i=>$v)$stmt->bindValue($i+1,$v);$stmt->bindValue(count($vals)+1,$size,PDO::PARAM_INT);$stmt->bindValue(count($vals)+2,($page-1)*$size,PDO::PARAM_INT);$stmt->execute();
       json_response(['records'=>$stmt->fetchAll(),'total_count'=>(int)$count->fetchColumn(),'page'=>$page,'page_size'=>$size,'total_pages'=>(int)ceil((int)$count->fetchColumn()/$size)]);
     }
-    if($path==='/api/admin/upload'&&$method==='POST') {
+    if(($path==='/api/admin/upload'||$path==='/api/admin/preview-pdf')&&$method==='POST') {
       if(empty($_FILES['files'])) json_response(['error'=>'Select one or more PDF files'],400);
       $batch=[];$pdo=db();$files=$_FILES['files'];$n=is_array($files['name'])?count($files['name']):1;
       for($i=0;$i<$n;$i++){
