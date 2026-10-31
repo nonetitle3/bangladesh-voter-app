@@ -15,7 +15,10 @@ class LegacyAdminAuth {
         }
         try {
             $claims = JWT::decode($m[1], new Key($secret, 'HS256'));
-            if (($claims->role ?? '') !== 'admin' || (int)($claims->exp ?? 0) < time()) {
+            if (($claims->role ?? '') !== 'admin') {
+                return response()->json(['error' => 'Admin access required'], 403);
+            }
+            if ((int)($claims->exp ?? 0) < time()) {
                 return response()->json(['error' => 'Invalid or expired token'], 401);
             }
             $request->attributes->set('legacy_admin', [
