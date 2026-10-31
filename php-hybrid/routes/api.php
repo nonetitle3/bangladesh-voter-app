@@ -1,7 +1,7 @@
 <?php
-use Illuminate\\Support\\Facades\\Route;
-use App\\Http\\Controllers\\Api\\HealthController;
-use App\\Http\\Controllers\\Api\\AdminAuthController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\AdminAuthController;
 
 Route::get('/health', HealthController::class);
 Route::prefix('admin')->group(function () {
