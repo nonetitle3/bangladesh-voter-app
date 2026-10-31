@@ -6,10 +6,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends git unzip libzi
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 COPY . .
-RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader \
+RUN mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs \
+ && composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader \
  && sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf \
  && printf '\n<Directory /var/www/html/public>\nAllowOverride All\nRequire all granted\n</Directory>\n' >> /etc/apache2/apache2.conf \
- && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
  && chown -R www-data:www-data storage bootstrap/cache
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 EXPOSE 80
