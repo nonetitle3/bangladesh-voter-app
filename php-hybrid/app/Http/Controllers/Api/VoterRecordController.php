@@ -74,7 +74,7 @@ class VoterRecordController
 
     public function index(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'page'=>['sometimes','integer','min:1'],
             'page_size'=>['sometimes','integer','min:1','max:200'],
             'per_page'=>['sometimes','integer','min:1','max:200'],
@@ -89,7 +89,7 @@ class VoterRecordController
         $total = (clone $query)->count();
         $records = $query->orderByDesc('id')
             ->forPage($page, $size)
-            ->get(self::EXPORT_FIELDS + ['id','document_id']);
+            ->get(array_merge(self::EXPORT_FIELDS, ['id','document_id']));
 
         return response()->json([
             'records'=>$records,
