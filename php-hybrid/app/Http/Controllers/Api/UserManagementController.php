@@ -30,7 +30,7 @@ class UserManagementController
     public function store(Request $request)
     {
         $data = $request->validate([
-            'username' => ['required', 'string', 'min:3', 'max:100', 'alpha_dash', 'unique:users,username'],
+            'username' => ['required', 'string', 'min:3', 'max:100', 'alpha_dash', 'unique:users,username', Rule::notIn(array_filter([config('voter_auth.admin_username')]))],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:12', 'max:1024'],
             'role' => ['required', Rule::in(['admin', 'viewer'])],
@@ -53,7 +53,7 @@ class UserManagementController
     {
         $actor = $request->attributes->get('auth_user', []);
         $data = $request->validate([
-            'username' => ['sometimes', 'required', 'string', 'min:3', 'max:100', 'alpha_dash', Rule::unique('users', 'username')->ignore($user->id)],
+            'username' => ['sometimes', 'required', 'string', 'min:3', 'max:100', 'alpha_dash', Rule::unique('users', 'username')->ignore($user->id), Rule::notIn(array_filter([config('voter_auth.admin_username')]))],
             'email' => ['sometimes', 'nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['sometimes', 'required', Rule::in(['admin', 'viewer'])],
             'is_active' => ['sometimes', 'required', 'boolean'],
