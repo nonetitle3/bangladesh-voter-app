@@ -91,13 +91,14 @@ def process_document(document_id: int) -> dict:
             cur.execute("UPDATE documents SET status='processing', error_msg=NULL WHERE id=%s", (document_id,))
             db.commit()
 
-        with materialize_pdf(stored_path) as pdf_path:
-            pages = extract_pdf(pdf_path)
         records_count = 0
         any_ocr = False
-        for page in pages:
-            with db.cursor() as cur:
-                cur.execute(
+        page_count = 0
+        with materialize_pdf(stored_path) as pdf_path:
+            for page in extract_pdf(pdf_path):
+                page_count = page.page_number
+                with db.cursor() as cur:
+                    cur.execute(
                     "SELECT id,status,ocr_used FROM processing_pages WHERE document_id=%s AND page_number=%s",
                     (document_id, page.page_number),
                 )
