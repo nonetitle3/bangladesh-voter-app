@@ -9,7 +9,6 @@ return new class extends Migration {
         Schema::table('voter_records', function (Blueprint $table): void {
             $table->index('serial_no', 'voter_serial_no_idx');
             $table->index('gender', 'voter_gender_idx');
-            $table->index(['document_id','page_number'], 'voter_document_page_lookup_idx');
         });
     }
 
@@ -18,7 +17,6 @@ return new class extends Migration {
         Schema::table('voter_records', function (Blueprint $table): void {
             $table->dropIndex('voter_serial_no_idx');
             $table->dropIndex('voter_gender_idx');
-            $table->dropIndex('voter_document_page_lookup_idx');
         });
     }
 };
