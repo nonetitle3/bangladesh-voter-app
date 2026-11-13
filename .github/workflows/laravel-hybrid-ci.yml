@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - 'php-hybrid/**'
+      - 'python-worker/**'
+      - 'python-worker/**'
       - 'scripts/backup_legacy_voter_data.py'
       - 'docs/migration/**'
       - '.github/workflows/laravel-hybrid-ci.yml'
@@ -124,3 +126,26 @@ jobs:
           python scripts/backup_legacy_voter_data.py --sqlite /tmp/legacy/backend/storage/voters.sqlite --pdf-dir /tmp/legacy/backend/storage/pdfs --json-dir /tmp/legacy/backend/data --output /tmp/backups
           test -f /tmp/backups/*/manifest.json
           test -f /tmp/backups/*/voters.sqlite
+
+  python-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Bengali and English Tesseract engines
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-ben tesseract-ocr-eng
+          tesseract --list-langs
+      - name: Install worker dependencies
+        working-directory: python-worker
+        run: pip install -r requirements.txt
+      - name: Compile Python worker
+        run: python -m compileall -q python-worker/app
+      - name: Run Python worker tests
+        working-directory: python-worker
+        run: pytest -q
+      - name: Build worker container
+        run: docker build -t voter-pdf-worker:ci python-worker
