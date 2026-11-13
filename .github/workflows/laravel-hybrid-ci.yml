@@ -7,7 +7,6 @@ on:
     paths:
       - 'php-hybrid/**'
       - 'python-worker/**'
-      - 'python-worker/**'
       - 'scripts/backup_legacy_voter_data.py'
       - 'docs/migration/**'
       - '.github/workflows/laravel-hybrid-ci.yml'
@@ -15,6 +14,7 @@ on:
     branches: [laravel-hybrid-migration]
     paths:
       - 'php-hybrid/**'
+      - 'python-worker/**'
       - 'scripts/backup_legacy_voter_data.py'
       - '.github/workflows/laravel-hybrid-ci.yml'
 
