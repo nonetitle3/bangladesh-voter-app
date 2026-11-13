@@ -1,11 +1,11 @@
 <?php
 
-namespace App\\Http\\Controllers\\Api;
+namespace App\Http\Controllers\Api;
 
-use App\\Models\\VoterRecord;
-use Illuminate\\Database\\Eloquent\\Builder;
-use Illuminate\\Http\\Request;
-use Symfony\\Component\\HttpFoundation\\StreamedResponse;
+use App\Models\VoterRecord;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VoterRecordController
 {
@@ -23,7 +23,7 @@ class VoterRecordController
     {
         $query = VoterRecord::query();
         $like = static function (string $value): string {
-            return '%'.str_replace(['\\\\','%','_'], ['\\\\\\\\','\\\\%','\\\\_'], trim($value)).'%';
+            return '%'.str_replace(['\\','%','_'], ['\\\\','\\%','\\_'], trim($value)).'%';
         };
 
         if ($request->filled('q')) {
@@ -103,7 +103,7 @@ class VoterRecordController
     public function dashboard()
     {
         $totalRecords = VoterRecord::query()->count();
-        $totalPdfs = \\App\\Models\\Document::query()->count();
+        $totalPdfs = \App\Models\Document::query()->count();
 
         $topDistricts = VoterRecord::query()
             ->selectRaw("COALESCE(NULLIF(district, ''), 'Unknown') AS name, COUNT(*) AS count")
@@ -131,7 +131,7 @@ class VoterRecordController
 
         return response()->streamDownload(function () use ($query, $fields): void {
             $out = fopen('php://output', 'wb');
-            fwrite($out, "\\xEF\\xBB\\xBF");
+            fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, $fields);
             $query->chunkById(1000, function ($rows) use ($out, $fields): void {
                 foreach ($rows as $row) {
@@ -139,7 +139,7 @@ class VoterRecordController
                     foreach ($fields as $field) {
                         $value = (string) ($row->{$field} ?? '');
                         // Prevent spreadsheet formula execution when CSV is opened.
-                        if ($value !== '' && preg_match('/^[=+@\\-\\t\\r]/u', $value)) $value = "'".$value;
+                        if ($value !== '' && preg_match('/^[=+@\-\t\r]/u', $value)) $value = "'".$value;
                         $values[] = $value;
                     }
                     fputcsv($out, $values);
