@@ -15,11 +15,11 @@ Independent Python 3.12 service for page-by-page extraction and OCR. It shares t
 ## Required shared infrastructure
 
 - MySQL 8 database with Phase 2 migrations already applied.
-- The worker and Laravel container must mount the same Render persistent disk at the same absolute path (default `/var/data`).
-- Worker environment must contain the same DB connection values and a separate strong `WORKER_API_TOKEN`.
-- The PDF storage root must contain the original PDF paths stored in `documents.stored_path`.
+- Both services must connect to the same MySQL database and use the same strong `WORKER_API_TOKEN` contract (Laravel stores it as `PYTHON_WORKER_TOKEN`; worker stores it as `WORKER_API_TOKEN`).
+- **Recommended for Render:** use a private S3-compatible bucket (for example, Cloudflare R2) because separate Render services do not automatically share a local filesystem or persistent disk. Configure `OBJECT_STORAGE_*` in the worker and Laravel's S3 disk in the upload phase. Store the private object key in `documents.stored_path` as `s3://<bucket>/<key>`.
+- Local filesystem mode is supported only when both containers genuinely see the same mounted volume at the same absolute path; do not assume separate Render services share `/var/data`.
 
-Render worker service should be a separate Docker Web Service built with `python-worker/Dockerfile`. Set `SHARED_STORAGE_ROOT=/var/data` and attach the same shared storage only if the selected Render service/disk arrangement supports it. If Render cannot mount one disk to both services, use a private object-storage bucket and add a signed download strategy before production; do not pretend local container files are shared.
+Deploy the worker as a separate Render Docker Web Service using `python-worker/Dockerfile`, with a private/internal service URL. Add its DB settings, `WORKER_API_TOKEN`, and private object-storage credentials as Render environment variables. Never commit those values.
 
 ## Run locally
 
@@ -40,11 +40,12 @@ pytest -q
 - `GET /ready`: database connectivity check.
 - `POST /internal/process`: body `{"document_id": 123}`, header `Authorization: Bearer <WORKER_API_TOKEN>`.
 
-The API accepts document IDs only, never arbitrary file paths. It does not expose uploaded PDFs or OCR output publicly.
+The API accepts document IDs only, never arbitrary file paths. It does not expose uploaded PDFs or OCR output publicly. It supports either a validated local path under `SHARED_STORAGE_ROOT` or a private `s3://bucket/key` reference constrained to the configured bucket.
 
 ## Limitations to validate before production
 
 - Tesseract Bengali OCR quality depends on scan resolution, skew, print quality and page layout. This is a first-pass OCR engine, not a guarantee of perfect voter field extraction.
 - The existing parser is label-based and may not understand every PDF layout. Inspect representative original PDFs before changing parsing or normalization.
 - The current phase processes one document synchronously per internal request. Phase 5 adds Laravel queue dispatch, retries, progress APIs and upload integration.
+- The worker expects the Phase 2 `processing_pages` and Phase 4 `processing_page_records` migrations to be applied before it processes a document.
 - Password-protected PDFs are rejected with an explicit error.
