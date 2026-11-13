@@ -15,10 +15,10 @@ class AuthenticationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        putenv('JWT_SECRET=phase3-test-secret');
-        putenv('ADMIN_USERNAME=legacy-admin');
-        putenv('ADMIN_PASSWORD=legacy-password');
-        putenv('ADMIN_PASSWORD_HASH=');
+        config(['voter_auth.jwt_secret' => 'phase3-test-secret']);
+        config(['voter_auth.admin_username' => 'legacy-admin']);
+        config(['voter_auth.admin_password' => 'legacy-password']);
+        config(['voter_auth.admin_password_hash' => '']);
     }
 
     public function test_legacy_environment_admin_login_keeps_eight_hour_jwt_contract(): void
