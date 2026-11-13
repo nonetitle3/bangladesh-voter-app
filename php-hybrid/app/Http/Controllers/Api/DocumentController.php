@@ -59,12 +59,12 @@ class DocumentController
     ]);
     $created[] = $doc;
    }
-  } catch (\\Throwable $e) {
+  } catch (\Throwable $e) {
    foreach ($created as $doc) {
-    try { $doc->delete(); } catch (\\Throwable $ignored) {}
+    try { $doc->delete(); } catch (\Throwable $ignored) {}
    }
    foreach ($uploadedKeys as $key) {
-    try { $disk->delete($key); } catch (\\Throwable $ignored) {}
+    try { $disk->delete($key); } catch (\Throwable $ignored) {}
    }
    $batch->delete();
    return response()->json(['error'=>'PDF upload failed','detail'=>$e->getMessage()],500);
