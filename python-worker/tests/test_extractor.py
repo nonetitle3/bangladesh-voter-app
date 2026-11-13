@@ -5,7 +5,7 @@ def test_native_text_page_does_not_trigger_ocr(monkeypatch, tmp_path):
     pdf_path = tmp_path / "native.pdf"
     doc = fitz.open()
     page = doc.new_page()
-    page.insert_text((72, 72), "Voter Name: Example Person")
+    page.insert_text((72, 72), "Voter Name: Example Person, Father Name: Example Father")
     doc.save(pdf_path)
     doc.close()
     def fail_if_called(_page):
