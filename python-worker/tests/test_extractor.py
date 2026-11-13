@@ -11,7 +11,7 @@ def test_native_text_page_does_not_trigger_ocr(monkeypatch, tmp_path):
     def fail_if_called(_page):
         raise AssertionError("OCR should not run for readable native text")
     monkeypatch.setattr(extractor, "_ocr_page", fail_if_called)
-    result = extractor.extract_pdf(pdf_path)
+    result = list(extractor.extract_pdf(pdf_path))
     assert len(result) == 1
     assert "Example Person" in result[0].extracted_text
     assert result[0].ocr_used is False
