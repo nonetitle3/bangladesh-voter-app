@@ -79,6 +79,11 @@ class AdminAuthController
 
     public function me(Request $request)
     {
-        return response()->json(['authenticated' => true] + ($request->attributes->get('legacy_admin') ?? []));
+        $identity = $request->attributes->get('legacy_admin') ?? [];
+        return response()->json([
+            'authenticated' => true,
+            'username' => $identity['username'] ?? 'admin',
+            'role' => $identity['role'] ?? 'admin',
+        ]);
     }
 }
