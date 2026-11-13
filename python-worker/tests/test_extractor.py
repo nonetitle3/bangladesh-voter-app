@@ -23,7 +23,7 @@ def test_empty_page_uses_ocr_fallback(monkeypatch, tmp_path):
     doc.save(pdf_path)
     doc.close()
     monkeypatch.setattr(extractor, "_ocr_page", lambda _page: ("নাম: পরীক্ষামূলক", 0.91))
-    result = extractor.extract_pdf(pdf_path)
+    result = list(extractor.extract_pdf(pdf_path))
     assert result[0].extracted_text == "নাম: পরীক্ষামূলক"
     assert result[0].ocr_used is True
     assert result[0].confidence == 0.91
