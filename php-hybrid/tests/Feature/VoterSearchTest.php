@@ -129,6 +129,50 @@ class VoterSearchTest extends TestCase
             ->assertJsonStructure(['top_districts','top_occupations','gender_breakdown']);
     }
 
+    public function test_administrative_filters_gender_page_and_legacy_alias_work(): void
+    {
+        $this->record();
+        $this->record([
+            'voter_id'=>'9876543210',
+            'name'=>'রওশন আরা',
+            'gender'=>'মহিলা',
+            'upazila'=>'ভালুকা',
+            'union_name'=>'ভরাডোবা',
+            'ward'=>'২',
+            'page_number'=>9,
+        ]);
+
+        $this->withToken($this->token)->getJson('/api/voter-search/records?upazila=ত্রিশাল&union=বালিয়া&gender=পুরুষ&page_number=7')
+            ->assertOk()
+            ->assertJsonPath('total_count',1)
+            ->assertJsonPath('records.0.voter_id','1234567890');
+    }
+
+    public function test_search_filter_validation_rejects_invalid_pagination_and_oversized_query(): void
+    {
+        $this->withToken($this->token)->getJson('/api/admin/records?page_size=999')
+            ->assertUnprocessable();
+        $this->withToken($this->token)->getJson('/api/admin/records?q='.str_repeat('ক',301))
+            ->assertUnprocessable();
+    }
+
+    public function test_csv_export_neutralizes_spreadsheet_formulas(): void
+    {
+        $this->record(['name'=>'=HYPERLINK("https://bad.example","click")']);
+        $response=$this->withToken($this->token)->get('/api/admin/export/csv');
+        $response->assertOk();
+        $this->assertStringContainsString("'=HYPERLINK", $response->streamedContent());
+    }
+
+    public function test_legacy_alias_dashboard_and_exports_are_protected_and_available(): void
+    {
+        $this->record();
+        $this->withToken($this->token)->getJson('/api/voter-search/dashboard')
+            ->assertOk()->assertJsonPath('total_records',1);
+        $this->withToken($this->token)->get('/api/voter-search/export/csv')->assertOk();
+        $this->withToken($this->token)->get('/api/voter-search/export/excel')->assertOk();
+    }
+
     public function test_search_requires_admin_authentication(): void
     {
         $this->getJson('/api/admin/records')->assertUnauthorized();
