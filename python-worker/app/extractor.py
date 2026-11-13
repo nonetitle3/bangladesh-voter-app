@@ -29,19 +29,27 @@ def _ocr_page(page: fitz.Page) -> tuple[str, float | None]:
         image, lang=settings.ocr_languages, config="--psm 6",
         output_type=pytesseract.Output.DICT, timeout=settings.ocr_timeout,
     )
-    words, confidences = [], []
-    for word, confidence in zip(data.get("text", []), data.get("conf", [])):
-        word = word.strip()
+    lines: dict[tuple, list[str]] = {}
+    confidences = []
+    count = len(data.get("text", []))
+    for index in range(count):
+        word = str(data["text"][index]).strip()
         try:
-            score = float(confidence)
+            score = float(data["conf"][index])
         except (TypeError, ValueError):
             score = -1
         if word:
-            words.append(word)
+            key = (
+                data.get("block_num", [0] * count)[index],
+                data.get("par_num", [0] * count)[index],
+                data.get("line_num", [0] * count)[index],
+            )
+            lines.setdefault(key, []).append(word)
             if score >= 0:
                 confidences.append(score)
     confidence = (sum(confidences) / len(confidences) / 100) if confidences else None
-    return " ".join(words), confidence
+    text = "\\n".join(" ".join(words) for words in lines.values())
+    return text, confidence
 
 def extract_pdf(path: Path) -> list[PageResult]:
     if not path.is_file():
