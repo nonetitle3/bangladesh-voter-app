@@ -32,29 +32,43 @@ class ProcessVoterDocument implements ShouldQueue
   }
   $base = rtrim((string) config('services.python_worker.url'), '/');
   $token = (string) config('services.python_worker.token');
-  if ($base === '' || $token === '') {
-   throw new RuntimeException('Python worker URL or token is not configured');
-  }
+  if ($base === '' || $token === '') throw new RuntimeException('Python worker URL or token is not configured');
+
   $document->forceFill(['status'=>'processing','error_msg'=>null])->save();
-
   try {
-   $response = Http::acceptJson()
-    ->withToken($token)
-    ->connectTimeout(15)
-    ->timeout((int) config('services.python_worker.timeout', 1500))
-    ->post($base.'/internal/process', ['document_id'=>$document->id]);
+   $client = Http::acceptJson()->withToken($token)->connectTimeout(15)->timeout(30);
+   $accepted = $client->post($base.'/internal/process', ['document_id'=>$document->id]);
+   if (!$accepted->successful()) {
+    throw new RuntimeException('Python worker rejected the job (HTTP '.$accepted->status().'): '.substr($accepted->body(),0,500));
+   }
+   $initial = $accepted->json() ?? [];
+   if (($initial['status'] ?? '') === 'completed') {
+    $document->refresh();
+    $this->refreshBatch($document->upload_batch_id);
+    return;
+   }
 
-   if (!$response->successful()) {
-    throw new RuntimeException('Python worker returned HTTP '.$response->status().': '.substr($response->body(),0,500));
-   }
-   $result = $response->json() ?? [];
-   if (($result['status'] ?? '') !== 'completed') {
-    throw new RuntimeException('Python worker did not complete document processing: '.json_encode($result));
-   }
-   $document->refresh();
-   $this->refreshBatch($document->upload_batch_id);
+   $deadline = time() + (int) config('services.python_worker.timeout',1500);
+   do {
+    sleep(5);
+    $statusResponse = $client->get($base.'/internal/status/'.$document->id);
+    if (!$statusResponse->successful()) {
+     throw new RuntimeException('Python worker status request failed (HTTP '.$statusResponse->status().')');
+    }
+    $status = $statusResponse->json() ?? [];
+    $state = $status['status'] ?? 'unknown';
+    if ($state === 'completed') {
+     $document->refresh();
+     $this->refreshBatch($document->upload_batch_id);
+     return;
+    }
+    if ($state === 'failed') {
+     throw new RuntimeException('PDF processing failed: '.substr((string)($status['error'] ?? 'Unknown worker error'),0,1000));
+    }
+    if (time() >= $deadline) throw new RuntimeException('Timed out waiting for Python PDF worker');
+   } while (true);
   } catch (ConnectionException $e) {
-   throw new RuntimeException('Could not connect to Python PDF worker: '.$e->getMessage(), 0, $e);
+   throw new RuntimeException('Could not connect to Python PDF worker: '.$e->getMessage(),0,$e);
   }
  }
 
