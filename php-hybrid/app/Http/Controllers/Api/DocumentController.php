@@ -13,8 +13,8 @@ class DocumentController
 {
  public function upload(Request $request)
  {
-  $maxFiles = max(1,min(100,(int) env('PDF_MAX_FILES_PER_UPLOAD',100)));
-  $maxKb = max(1024,(int) env('PDF_MAX_FILE_MB',50)) * 1024;
+  $maxFiles = (int) config('voter_documents.max_files',100);
+  $maxKb = (int) config('voter_documents.max_file_mb',50) * 1024;
   $data = $request->validate([
    'files'=>['required','array','min:1','max:'.$maxFiles],
    'files.*'=>['required','file','mimes:pdf','mimetypes:application/pdf','max:'.$maxKb],
@@ -147,7 +147,7 @@ class DocumentController
    }
    return [Storage::disk('s3'),$key];
   }
-  $root = realpath((string)env('PDF_STORAGE_PATH','/var/data/pdfs'));
+  $root = realpath((string)config('filesystems.disks.pdf_local.root','/var/data/pdfs'));
   $resolved = realpath($path);
   if (!$root || !$resolved || !str_starts_with($resolved,$root.DIRECTORY_SEPARATOR) || strtolower(pathinfo($resolved,PATHINFO_EXTENSION)) !== 'pdf') {
    abort(422,'Invalid local PDF path');
