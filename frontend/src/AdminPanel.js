@@ -1,4 +1,4 @@
-import React,{useCallback,useEffect,useMemo,useState} from "react";
+import React,{useCallback,useEffect,useState} from "react";
 const API=(process.env.REACT_APP_API_URL||(window.location.origin+"/api")).replace(/\/$/,"");
 const KEY="adminToken";
 async function api(path,options={},token=""){
@@ -19,7 +19,6 @@ export default function AdminPanel(){
  const [filters,setFilters]=useState({q:"",name:"",father_name:"",mother_name:"",voter_id:"",district:"",upazila:"",union:"",ward:"",gender:""});
  const [records,setRecords]=useState([]),[meta,setMeta]=useState({page:1,total_count:0,total_pages:0});
  const [loading,setLoading]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
- const auth=useMemo(()=>({Authorization:"Bearer "+token}),[token]);
  const dashboard=useCallback(async()=>{try{const [s,h]=await Promise.all([api("/admin/dashboard",{},token),api("/health")]);setStats(s);setHealth(h);}catch(e){setError(e.message);}},[token]);
  const listDocs=useCallback(async(p=1)=>{setLoading(true);try{const d=await api("/admin/documents?page="+p+"&page_size=20",{},token);setDocs(d.data||[]);setDocPage(d.current_page||p);}catch(e){setError(e.message);}finally{setLoading(false);}},[token]);
  const search=useCallback(async(p=1)=>{setLoading(true);try{const q=new URLSearchParams({page:String(p),page_size:"50"});Object.entries(filters).forEach(([k,v])=>{if(String(v).trim())q.set(k,String(v).trim());});const d=await api("/admin/records?"+q,{},token);setRecords(d.records||[]);setMeta({page:d.page||p,total_count:d.total_count||0,total_pages:d.total_pages||0});}catch(e){setError(e.message);}finally{setLoading(false);}},[token,filters]);
