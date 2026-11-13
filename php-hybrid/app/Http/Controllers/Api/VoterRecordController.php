@@ -82,6 +82,22 @@ class VoterRecordController
             'document_id'=>['sometimes','integer','min:1'],
             'gender'=>['sometimes','string','max:30'],
             'q'=>['sometimes','string','max:300'],
+            'name'=>['sometimes','string','max:300'],
+            'father_name'=>['sometimes','string','max:300'],
+            'mother_name'=>['sometimes','string','max:300'],
+            'voter_id'=>['sometimes','string','max:100'],
+            'serial_no'=>['sometimes','string','max:100'],
+            'district'=>['sometimes','string','max:200'],
+            'upazila'=>['sometimes','string','max:200'],
+            'union'=>['sometimes','string','max:200'],
+            'union_name'=>['sometimes','string','max:200'],
+            'ward'=>['sometimes','string','max:100'],
+            'occupation'=>['sometimes','string','max:300'],
+            'division'=>['sometimes','string','max:200'],
+            'village'=>['sometimes','string','max:300'],
+            'address'=>['sometimes','string','max:500'],
+            'post_code'=>['sometimes','string','max:30'],
+            'pdf_filename'=>['sometimes','string','max:255'],
         ]);
         $page = max(1, (int) $request->query('page', 1));
         $size = min(200, max(1, (int) $request->query('page_size', $request->query('per_page', 50))));
