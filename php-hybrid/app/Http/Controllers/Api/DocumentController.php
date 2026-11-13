@@ -48,6 +48,7 @@ class DocumentController
      if (is_resource($stream)) fclose($stream);
     }
     if (!$stored) throw new \RuntimeException('Failed to store uploaded PDF');
+    $uploadedKeys[] = $key;
     $storedPath = $diskName === 's3'
       ? 's3://'.config('filesystems.disks.s3.bucket').'/'.$key
       : $disk->path($key);
