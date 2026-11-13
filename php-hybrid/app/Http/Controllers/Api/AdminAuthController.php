@@ -12,10 +12,10 @@ class AdminAuthController
     public function configStatus()
     {
         return response()->json([
-            'ADMIN_USERNAME' => (bool) env('ADMIN_USERNAME'),
-            'ADMIN_PASSWORD' => (bool) env('ADMIN_PASSWORD'),
-            'ADMIN_PASSWORD_HASH' => (bool) env('ADMIN_PASSWORD_HASH'),
-            'JWT_SECRET' => (bool) env('JWT_SECRET'),
+            'ADMIN_USERNAME' => (bool) config('voter_auth.admin_username'),
+            'ADMIN_PASSWORD' => (bool) config('voter_auth.admin_password'),
+            'ADMIN_PASSWORD_HASH' => (bool) config('voter_auth.admin_password_hash'),
+            'JWT_SECRET' => (bool) config('voter_auth.jwt_secret'),
             'DATABASE_AUTH' => true,
         ]);
     }
