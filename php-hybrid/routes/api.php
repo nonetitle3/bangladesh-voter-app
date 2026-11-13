@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\AdminAuthController;
 use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\VoterRecordController;
 
 Route::get('/health', HealthController::class);
 Route::prefix('admin')->group(function () {
