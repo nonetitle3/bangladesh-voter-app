@@ -51,15 +51,16 @@ def _ocr_page(page: fitz.Page) -> tuple[str, float | None]:
     text = "\\n".join(" ".join(words) for words in lines.values())
     return text, confidence
 
-def extract_pdf(path: Path) -> list[PageResult]:
+def extract_pdf(path: Path):
     if not path.is_file():
         raise FileNotFoundError("PDF file does not exist in the shared storage volume")
     if path.stat().st_size > settings.max_pdf_mb * 1024 * 1024:
         raise ValueError(f"PDF exceeds configured limit of {settings.max_pdf_mb} MB")
-    results = []
     with fitz.open(path) as pdf:
         if pdf.is_encrypted:
             raise ValueError("Encrypted/password-protected PDFs are not supported")
+        if pdf.page_count < 1:
+            raise ValueError("PDF contains no pages")
         for index, page in enumerate(pdf, start=1):
             native_text = page.get_text("text", sort=True) or ""
             text = native_text
@@ -68,5 +69,4 @@ def extract_pdf(path: Path) -> list[PageResult]:
             if len(re.sub(r"\s+", "", native_text)) < settings.min_text_chars:
                 text, confidence = _ocr_page(page)
                 used_ocr = True
-            results.append(PageResult(index, text, normalize_search_text(text), used_ocr, confidence))
-    return results
+            yield PageResult(index, text, normalize_search_text(text), used_ocr, confidence)
