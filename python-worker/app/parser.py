@@ -25,10 +25,10 @@ def clean(value: str) -> str:
 
 def normalize_gender(value: str) -> str:
     value = clean(value)
-    if re.search(r"পুরুষ|male|\bm\b", value, re.I):
-        return "পুরুষ"
-    if re.search(r"মহিলা|নারী|female|\bf\b", value, re.I):
+    if re.search(r"মহিলা|নারী|\bfemale\b|\bf\b", value, re.I):
         return "মহিলা"
+    if re.search(r"পুরুষ|\bmale\b|\bm\b", value, re.I):
+        return "পুরুষ"
     return value
 
 def split_voters(text: str) -> list[str]:
