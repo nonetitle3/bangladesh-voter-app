@@ -59,14 +59,16 @@ class DocumentController
     ]);
     $created[] = $doc;
    }
-  } catch (\Throwable $e) {
+  } catch (\\Throwable $e) {
    foreach ($created as $doc) {
-    try { $this->deleteStoredFile($doc); $doc->delete(); } catch (\Throwable $ignored) {}
+    try { $doc->delete(); } catch (\\Throwable $ignored) {}
+   }
+   foreach ($uploadedKeys as $key) {
+    try { $disk->delete($key); } catch (\\Throwable $ignored) {}
    }
    $batch->delete();
    return response()->json(['error'=>'PDF upload failed','detail'=>$e->getMessage()],500);
   }
-
   foreach ($created as $doc) ProcessVoterDocument::dispatch((int)$doc->id);
   $batch->forceFill(['status'=>'queued'])->save();
   return response()->json([
