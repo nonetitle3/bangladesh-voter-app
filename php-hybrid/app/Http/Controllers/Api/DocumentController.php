@@ -34,10 +34,11 @@ class DocumentController
    'processed'=>0,'records'=>0,'failures'=>0,'status'=>'queued',
   ]);
   $created = [];
+  $uploadedKeys = [];
   try {
    foreach ($data['files'] as $file) {
     $original = $file->getClientOriginalName();
-    $safeName = preg_replace('/[^A-Za-z0-9._-\x{0980}-\x{09FF}]/u','_',basename($original)) ?: 'document.pdf';
+    $safeName = preg_replace('/[^A-Za-z0-9._\-\x{0980}-\x{09FF}]/u','_',basename($original)) ?: 'document.pdf';
     if (!str_ends_with(strtolower($safeName),'.pdf')) $safeName .= '.pdf';
     $key = 'voter-pdfs/'.now()->format('Y/m').'/'.Str::uuid().'-'.$safeName;
     $stream = fopen($file->getRealPath(),'rb');
