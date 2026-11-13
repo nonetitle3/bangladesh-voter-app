@@ -1,4 +1,6 @@
 from pathlib import Path
+from contextlib import contextmanager
+from tempfile import TemporaryDirectory
 from datetime import datetime, timezone
 from .config import settings
 from .database import connect
@@ -24,6 +26,51 @@ def safe_pdf_path(stored_path: str) -> Path:
         raise ValueError("Only PDF files can be processed")
     return resolved
 
+
+@contextmanager
+def materialize_pdf(stored_path: str):
+    if stored_path.startswith("s3://"):
+        import boto3
+        from botocore.config import Config
+        from urllib.parse import urlparse
+        parsed = urlparse(stored_path)
+        bucket = parsed.netloc
+        key = parsed.path.lstrip("/")
+        if not bucket or not key or any(part == ".." for part in key.split("/")):
+            raise ValueError("Invalid object-storage PDF reference")
+        if not settings.object_bucket or bucket != settings.object_bucket:
+            raise ValueError("PDF bucket does not match configured OBJECT_STORAGE_BUCKET")
+        if not settings.object_access_key or not settings.object_secret_key:
+            raise RuntimeError("Object-storage credentials are not configured")
+        client = boto3.client(
+            "s3", endpoint_url=settings.object_endpoint or None,
+            region_name=settings.object_region,
+            aws_access_key_id=settings.object_access_key,
+            aws_secret_access_key=settings.object_secret_key,
+            config=Config(signature_version="s3v4", retries={"max_attempts": 3}),
+        )
+        response = client.get_object(Bucket=bucket, Key=key)
+        if response.get("ContentLength", 0) > settings.max_pdf_mb * 1024 * 1024:
+            response["Body"].close()
+            raise ValueError(f"PDF exceeds configured limit of {settings.max_pdf_mb} MB")
+        with TemporaryDirectory(prefix="voter-worker-") as temp_dir:
+            local_path = Path(temp_dir) / "source.pdf"
+            try:
+                with local_path.open("wb") as output:
+                    total = 0
+                    for chunk in response["Body"].iter_chunks(chunk_size=1024 * 1024):
+                        if not chunk:
+                            continue
+                        total += len(chunk)
+                        if total > settings.max_pdf_mb * 1024 * 1024:
+                            raise ValueError(f"PDF exceeds configured limit of {settings.max_pdf_mb} MB")
+                        output.write(chunk)
+            finally:
+                response["Body"].close()
+            yield local_path
+        return
+    yield safe_pdf_path(stored_path)
+
 def _now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
@@ -39,12 +86,13 @@ def process_document(document_id: int) -> dict:
                 return {"document_id": document_id, "status": "completed", "skipped": True, "reason": "already_completed"}
             if doc["status"] not in ("pending", "processing", "failed"):
                 raise ValueError(f"Document status '{doc['status']}' is not eligible for processing")
-            pdf_path = safe_pdf_path(doc["stored_path"] or "")
+            stored_path = doc["stored_path"] or ""
             db.begin()
             cur.execute("UPDATE documents SET status='processing', error_msg=NULL WHERE id=%s", (document_id,))
             db.commit()
 
-        pages = extract_pdf(pdf_path)
+        with materialize_pdf(stored_path) as pdf_path:
+            pages = extract_pdf(pdf_path)
         records_count = 0
         any_ocr = False
         for page in pages:
