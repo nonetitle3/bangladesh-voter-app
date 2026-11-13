@@ -12,6 +12,10 @@ Route::prefix('admin')->group(function () {
     Route::middleware('legacy.admin')->group(function () {
         Route::get('/me', [AdminAuthController::class, 'me']);
         Route::apiResource('/users', UserManagementController::class);
+        Route::get('/records', [VoterRecordController::class, 'index']);
+        Route::get('/dashboard', [VoterRecordController::class, 'dashboard']);
+        Route::get('/export/csv', [VoterRecordController::class, 'exportCsv']);
+        Route::get('/export/excel', [VoterRecordController::class, 'exportExcel']);
         Route::post('/upload', [DocumentController::class, 'upload'])->middleware('throttle:10,1');
         Route::get('/upload/{id}', [DocumentController::class, 'batch']);
         Route::get('/documents', [DocumentController::class, 'index']);
