@@ -2,8 +2,8 @@
 import re
 
 LABELS = {
-    "voter_id": [r"ভোটার\s*(?:নং|নম্বর)", r"NID\s*(?:No|Number)?", r"voter\s*id"],
-    "serial_no": [r"ক্রমিক", r"serial"],
+    "voter_id": [r"ভোটার\s*(?:নং|নম্বর)\s*[:：-]?", r"NID\s*(?:No|Number)?\s*[:：-]?", r"voter\s*id\s*[:：-]?"],
+    "serial_no": [r"ক্রমিক\s*[:：-]?", r"serial\s*[:：-]?"],
     "name": [r"^নাম\s*[:：-]?", r"^name\s*[:：-]?"],
     "father_name": [r"পিতা\s*[:：-]?", r"father(?:'s)?\s*name\s*[:：-]?"],
     "mother_name": [r"মাতা\s*[:：-]?", r"mother(?:'s)?\s*name\s*[:：-]?"],
