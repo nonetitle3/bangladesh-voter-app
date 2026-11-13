@@ -14,7 +14,7 @@ class LegacyAuthenticate
     public function handle(Request $request, Closure $next): Response
     {
         $header = $request->header('Authorization', '');
-        $secret = (string) env('JWT_SECRET', '');
+        $secret = (string) config('voter_auth.jwt_secret', '');
         if (!preg_match('/^Bearer\s+(.+)$/i', $header, $matches) || $secret === '') {
             return response()->json(['error' => 'Authentication required'], 401);
         }
