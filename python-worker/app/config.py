@@ -18,5 +18,10 @@ class Settings:
     ocr_dpi: int = int(os.getenv("OCR_DPI", "220"))
     ocr_timeout: int = int(os.getenv("OCR_TIMEOUT_SECONDS", "120"))
     max_pdf_mb: int = int(os.getenv("MAX_PDF_MB", "100"))
+    object_endpoint: str = os.getenv("OBJECT_STORAGE_ENDPOINT", "")
+    object_bucket: str = os.getenv("OBJECT_STORAGE_BUCKET", "")
+    object_region: str = os.getenv("OBJECT_STORAGE_REGION", "auto")
+    object_access_key: str = os.getenv("OBJECT_STORAGE_ACCESS_KEY", "")
+    object_secret_key: str = os.getenv("OBJECT_STORAGE_SECRET_KEY", "")
 
 settings = Settings()
