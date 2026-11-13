@@ -74,3 +74,19 @@ The worker process's background task is not itself a durable queue. Durability a
 - Do not deploy uploads until all three services share the same MySQL database, S3 bucket and worker token.
 - The old Node endpoints and React frontend are not switched over in this phase.
 - No live PDFs or production data were migrated by these commits.
+
+
+## Phase 6 — voter search, dashboard and export APIs
+
+Routes (admin bearer JWT required):
+- `GET /api/admin/records` — filtered voter search and pagination.
+- `GET /api/admin/dashboard` — total records/PDFs and district, occupation, gender breakdowns.
+- `GET /api/admin/export/csv` — streaming UTF-8 CSV with BOM and spreadsheet formula protection.
+- `GET /api/admin/export/excel` — streaming Excel-compatible SpreadsheetML `.xls`.
+- Legacy aliases are also available under `/api/voter-search/records`, `/dashboard`, `/export/csv` and `/export/excel`.
+
+Supported query parameters: `q`, `name`, `father_name`, `mother_name`, `voter_id`, `serial_no`, `district`, `upazila`, `union`/`union_name`, `ward`, `division`, `village`, `address`, `post_code`, `occupation`, `gender`, `page_number`, `document_id`, `page`, `page_size`/`per_page`.
+
+Search uses parameter-bound partial-match filters and a fixed column allow-list. Pagination defaults to 50 rows and is capped at 200. Both exports share the same filters and stream database chunks. CSV is UTF-8 with BOM; Excel output is SpreadsheetML with Bengali text preserved.
+
+See `docs/migration/PHASE-6-SEARCH-EXPORT.md` for the API contract, examples, compatibility notes and performance caveats. Existing hierarchy JSON endpoints and the separate JSON-file search have not yet been ported; React integration is Phase 7.
