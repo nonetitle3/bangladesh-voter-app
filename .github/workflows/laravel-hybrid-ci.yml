@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'php-hybrid/**'
+      - 'frontend/**'
       - 'python-worker/**'
       - 'scripts/backup_legacy_voter_data.py'
       - 'docs/migration/**'
@@ -94,6 +95,23 @@ jobs:
           php artisan voters:import-sqlite /tmp/voters.sqlite
           php artisan voters:import-sqlite /tmp/voters.sqlite --execute
           php artisan voters:verify-sqlite /tmp/voters.sqlite
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install frontend dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build React frontend against Laravel API
+        env:
+          REACT_APP_API_URL: https://laravel-api.example.invalid/api
+        run: npm run build
+
   backup-script:
     runs-on: ubuntu-latest
     steps:
