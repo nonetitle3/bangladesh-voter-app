@@ -48,7 +48,7 @@ def _ocr_page(page: fitz.Page) -> tuple[str, float | None]:
             if score >= 0:
                 confidences.append(score)
     confidence = (sum(confidences) / len(confidences) / 100) if confidences else None
-    text = "\\n".join(" ".join(words) for words in lines.values())
+    text = "\n".join(" ".join(words) for words in lines.values())
     return text, confidence
 
 def extract_pdf(path: Path):
