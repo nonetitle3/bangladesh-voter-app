@@ -27,14 +27,14 @@ class AdminAuthController
             'password' => ['required', 'string', 'max:1024'],
         ]);
 
-        $secret = (string) env('JWT_SECRET', '');
+        $secret = (string) config('voter_auth.jwt_secret', '');
         if ($secret === '') {
             return response()->json(['error' => 'Admin authentication is not configured'], 500);
         }
 
-        $envUsername = (string) env('ADMIN_USERNAME', '');
-        $plain = (string) env('ADMIN_PASSWORD', '');
-        $legacyHash = (string) env('ADMIN_PASSWORD_HASH', '');
+        $envUsername = (string) config('voter_auth.admin_username', '');
+        $plain = (string) config('voter_auth.admin_password', '');
+        $legacyHash = (string) config('voter_auth.admin_password_hash', '');
 
         // First preserve the exact existing Render environment-admin contract.
         if ($envUsername !== '' && hash_equals($envUsername, $data['username'])) {
