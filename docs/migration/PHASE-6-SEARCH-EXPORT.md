@@ -11,8 +11,8 @@
 - Dashboard totals and top district, occupation and gender breakdowns.
 - Streaming UTF-8 CSV export with BOM, shared filter logic and CSV formula-injection protection.
 - Excel-compatible SpreadsheetML \`.xls\` export with Bengali Unicode preservation.
-- New indexes for serial number and gender. Existing voter ID and document/page indexes are retained.
-- Search, pagination, dashboard, export and authentication tests.
+- Existing voter ID and document/page indexes plus the Phase 5 serial-number and gender indexes are retained. The response explicitly includes record `id` and `document_id` alongside voter fields.
+- Search, pagination, dashboard, export and authentication tests, including administrative filters, legacy route aliases, validation limits and CSV formula-injection protection.
 
 ## Routes
 
@@ -74,6 +74,12 @@ Authorization: Bearer <admin-token>
 - CSV and Excel exports stream rows in chunks rather than loading the complete result set into PHP memory.
 - Exact voter ID and serial number lookups benefit from indexes. Partial substring searches such as \`%term%\` generally cannot use ordinary B-tree indexes; large production datasets may require a separately tested n-gram/full-text search strategy without changing existing partial-match semantics.
 - Export requests can still be expensive when the user deliberately exports a very large filtered/unfiltered dataset. Add rate limits or asynchronous export jobs if production volume requires them.
+
+## Verification
+
+- CI workflow includes PHP syntax validation, Laravel feature tests, MySQL 8.4 migrations, legacy SQLite import/parity, Python worker tests and backup utility integration tests.
+- Phase 6 feature tests cover Bengali partial search, voter ID and parent-name filters, combined filters and pagination, administrative filters, legacy aliases, UTF-8 CSV, Excel-compatible XML, CSV formula neutralization, dashboard response keys and unauthenticated rejection.
+- The latest Phase 6 commit is `896f3ec581d2ff7a4aeee7a880d65170eaabe157`. Confirm its GitHub Actions run is green before merging.
 
 ## Not yet complete / not verified
 
