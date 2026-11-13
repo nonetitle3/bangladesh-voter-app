@@ -43,7 +43,7 @@ class DocumentController
     $key = 'voter-pdfs/'.now()->format('Y/m').'/'.Str::uuid().'-'.$safeName;
     $stream = fopen($file->getRealPath(),'rb');
     try {
-     $stored = $disk->put($key,$stream,['visibility'=>'private']);
+     $stored = $disk->put($key,$stream);
     } finally {
      if (is_resource($stream)) fclose($stream);
     }
@@ -145,7 +145,7 @@ class DocumentController
    $parts = parse_url($path);
    $bucket = $parts['host'] ?? '';
    $key = ltrim($parts['path'] ?? '','/');
-   if ($bucket !== (string)config('filesystems.disks.s3.bucket') || $key === '' || str_contains($key,'..')) {
+   if ($bucket !== (string)config('filesystems.disks.s3.bucket') || $key === '' || preg_match('#(^|/)\\.\\.(/|$)#',$key)) {
     abort(422,'Invalid private PDF object reference');
    }
    return [Storage::disk('s3'),$key];
