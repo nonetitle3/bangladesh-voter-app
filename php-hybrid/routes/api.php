@@ -25,3 +25,11 @@ Route::prefix('admin')->group(function () {
         Route::post('/documents/{id}/retry', [DocumentController::class, 'retry'])->middleware('throttle:10,1');
     });
 });
+
+// Legacy Node app also exposed the same router under /api/voter-search.
+Route::prefix('voter-search')->middleware('legacy.admin')->group(function () {
+    Route::get('/records', [VoterRecordController::class, 'index']);
+    Route::get('/dashboard', [VoterRecordController::class, 'dashboard']);
+    Route::get('/export/csv', [VoterRecordController::class, 'exportCsv']);
+    Route::get('/export/excel', [VoterRecordController::class, 'exportExcel']);
+});
