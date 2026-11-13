@@ -46,6 +46,6 @@ The API accepts document IDs only, never arbitrary file paths. It does not expos
 
 - Tesseract Bengali OCR quality depends on scan resolution, skew, print quality and page layout. This is a first-pass OCR engine, not a guarantee of perfect voter field extraction.
 - The existing parser is label-based and may not understand every PDF layout. Inspect representative original PDFs before changing parsing or normalization.
-- The current phase processes one document synchronously per internal request. Phase 5 adds Laravel queue dispatch, retries, progress APIs and upload integration.
+- The worker accepts processing requests asynchronously. Laravel's durable database queue owns retries and polls the authenticated status endpoint. The worker's in-process background task is not a durable queue; if the worker restarts, the Laravel job retries and already-completed pages are skipped.
 - The worker expects the Phase 2 `processing_pages` and Phase 4 `processing_page_records` migrations to be applied before it processes a document.
 - Password-protected PDFs are rejected with an explicit error.
