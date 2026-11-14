@@ -6,6 +6,8 @@ services:
     dockerContext: ./php-hybrid
     dockerfilePath: ./php-hybrid/Dockerfile
     healthCheckPath: /api/health
+    port: 10000
+    preDeployCommand: php artisan migrate --force
     plan: starter
     envVars:
       - key: APP_ENV
@@ -65,7 +67,10 @@ services:
       - key: AWS_USE_PATH_STYLE_ENDPOINT
         value: "true"
       - key: PYTHON_WORKER_URL
-        sync: false
+        fromService:
+          name: bangladesh-voter-python-worker-staging
+          type: pserv
+          property: hostport
       - key: PYTHON_WORKER_TOKEN
         sync: false
       - key: PYTHON_WORKER_TIMEOUT
@@ -134,15 +139,17 @@ services:
       - key: PYTHON_WORKER_TIMEOUT
         value: "1500"
 
-  - type: web
+  - type: pserv
     name: bangladesh-voter-python-worker-staging
     runtime: docker
     dockerContext: ./python-worker
     dockerfilePath: ./python-worker/Dockerfile
-    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    port: 10000
     plan: starter
-    healthCheckPath: /health
     envVars:
+      - key: PORT
+        value: "10000"
       - key: WORKER_API_TOKEN
         sync: false
       - key: DB_HOST
@@ -181,6 +188,10 @@ services:
     runtime: static
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: ./frontend/build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: REACT_APP_API_URL
         sync: false
