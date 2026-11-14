@@ -14,6 +14,7 @@ RUN mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sess
  && printf '\n<Directory /var/www/html/public>\nAllowOverride All\nRequire all granted\n</Directory>\n' >> /etc/apache2/apache2.conf \
  && chown -R www-data:www-data storage bootstrap/cache
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+ # Render's default web-service port; docker-entrypoint.sh applies runtime PORT.
 EXPOSE 10000
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
