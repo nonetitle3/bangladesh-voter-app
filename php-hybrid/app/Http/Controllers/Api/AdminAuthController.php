@@ -84,6 +84,7 @@ class AdminAuthController
             'authenticated' => true,
             'username' => $identity['username'] ?? 'admin',
             'role' => $identity['role'] ?? 'admin',
+            'user_id' => $identity['user_id'] ?? null,
         ]);
     }
 }
