@@ -31,6 +31,8 @@ class ProcessVoterDocument implements ShouldQueue
    return;
   }
   $base = rtrim((string) config('services.python_worker.url'), '/');
+  // Render's fromService hostport binding returns "host:port" without a scheme.
+  if ($base !== '' && !preg_match('#^https?://#i', $base)) $base = 'http://'.$base;
   $token = (string) config('services.python_worker.token');
   if ($base === '' || $token === '') throw new RuntimeException('Python worker URL or token is not configured');
 
