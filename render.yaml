@@ -1,0 +1,186 @@
+# Render Blueprint — staging only. Do not point this at production data before backups and approval.
+services:
+  - type: web
+    name: bangladesh-voter-laravel-staging
+    runtime: docker
+    dockerContext: ./php-hybrid
+    dockerfilePath: ./php-hybrid/Dockerfile
+    healthCheckPath: /api/health
+    plan: starter
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_TIMEZONE
+        value: Asia/Dhaka
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_CHARSET
+        value: utf8mb4
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: DB_QUEUE
+        value: default
+      - key: DB_QUEUE_RETRY_AFTER
+        value: "1900"
+      - key: FILESYSTEM_DISK
+        value: s3
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        value: auto
+      - key: AWS_BUCKET
+        sync: false
+      - key: AWS_ENDPOINT
+        sync: false
+      - key: AWS_USE_PATH_STYLE_ENDPOINT
+        value: "true"
+      - key: PYTHON_WORKER_URL
+        sync: false
+      - key: PYTHON_WORKER_TOKEN
+        sync: false
+      - key: PYTHON_WORKER_TIMEOUT
+        value: "1500"
+      - key: PDF_MAX_FILE_MB
+        value: "50"
+      - key: PDF_MAX_FILES_PER_UPLOAD
+        value: "100"
+
+  - type: worker
+    name: bangladesh-voter-laravel-queue-staging
+    runtime: docker
+    dockerContext: ./php-hybrid
+    dockerfilePath: ./php-hybrid/Dockerfile
+    dockerCommand: php artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=1600
+    plan: starter
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_CHARSET
+        value: utf8mb4
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: APP_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: DB_QUEUE
+        value: default
+      - key: DB_QUEUE_RETRY_AFTER
+        value: "1900"
+      - key: FILESYSTEM_DISK
+        value: s3
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        value: auto
+      - key: AWS_BUCKET
+        sync: false
+      - key: AWS_ENDPOINT
+        sync: false
+      - key: AWS_USE_PATH_STYLE_ENDPOINT
+        value: "true"
+      - key: PYTHON_WORKER_URL
+        sync: false
+      - key: PYTHON_WORKER_TOKEN
+        sync: false
+      - key: PYTHON_WORKER_TIMEOUT
+        value: "1500"
+
+  - type: web
+    name: bangladesh-voter-python-worker-staging
+    runtime: docker
+    dockerContext: ./python-worker
+    dockerfilePath: ./python-worker/Dockerfile
+    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: WORKER_API_TOKEN
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_CHARSET
+        value: utf8mb4
+      - key: OCR_LANGUAGES
+        value: ben+eng
+      - key: OCR_DPI
+        value: "220"
+      - key: OCR_TIMEOUT_SECONDS
+        value: "120"
+      - key: MAX_PDF_MB
+        value: "100"
+      - key: OBJECT_STORAGE_ENDPOINT
+        sync: false
+      - key: OBJECT_STORAGE_BUCKET
+        sync: false
+      - key: OBJECT_STORAGE_REGION
+        value: auto
+      - key: OBJECT_STORAGE_ACCESS_KEY
+        sync: false
+      - key: OBJECT_STORAGE_SECRET_KEY
+        sync: false
+
+  - type: web
+    name: bangladesh-voter-react-staging
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        sync: false
