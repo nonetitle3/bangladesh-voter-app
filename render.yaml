@@ -133,7 +133,10 @@ services:
       - key: AWS_USE_PATH_STYLE_ENDPOINT
         value: "true"
       - key: PYTHON_WORKER_URL
-        sync: false
+        fromService:
+          name: bangladesh-voter-python-worker-staging
+          type: pserv
+          property: hostport
       - key: PYTHON_WORKER_TOKEN
         sync: false
       - key: PYTHON_WORKER_TIMEOUT
