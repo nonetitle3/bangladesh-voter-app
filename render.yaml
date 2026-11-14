@@ -186,7 +186,7 @@ services:
   - type: web
     name: bangladesh-voter-react-staging
     runtime: static
-    buildCommand: cd frontend && npm ci && npm run build
+    buildCommand: cd frontend && npm install --no-audit --no-fund && npm run build
     staticPublishPath: ./frontend/build
     routes:
       - type: rewrite
