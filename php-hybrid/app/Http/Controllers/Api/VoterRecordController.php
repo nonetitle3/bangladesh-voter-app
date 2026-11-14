@@ -131,9 +131,22 @@ class VoterRecordController
             ->selectRaw("COALESCE(NULLIF(gender, ''), 'Unknown') AS name, COUNT(*) AS count")
             ->groupBy('gender')->orderByDesc('count')->get();
 
+        $documentStatuses = \\App\\Models\\Document::query()
+            ->selectRaw("COALESCE(NULLIF(status, ''), 'unknown') AS name, COUNT(*) AS count")
+            ->groupBy('status')->orderBy('status')->get();
+        $totalUsers = \\App\\Models\\User::query()->count();
+        $activeUsers = \\App\\Models\\User::query()->where('is_active', true)->count();
+        $divisionBreakdown = VoterRecord::query()
+            ->selectRaw("COALESCE(NULLIF(division, ''), 'Unknown') AS name, COUNT(*) AS count")
+            ->groupBy('division')->orderByDesc('count')->limit(10)->get();
+
         return response()->json([
             'total_pdfs'=>$totalPdfs,
             'total_records'=>$totalRecords,
+            'total_users'=>$totalUsers,
+            'active_users'=>$activeUsers,
+            'document_statuses'=>$documentStatuses,
+            'division_breakdown'=>$divisionBreakdown,
             'top_districts'=>$topDistricts,
             'top_occupations'=>$topOccupations,
             'gender_breakdown'=>$gender,
