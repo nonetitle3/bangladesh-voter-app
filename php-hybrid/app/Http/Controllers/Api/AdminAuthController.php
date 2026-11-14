@@ -1,0 +1,90 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Models\User;
+use Firebase\JWT\JWT;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class AdminAuthController
+{
+    public function configStatus()
+    {
+        return response()->json([
+            'ADMIN_USERNAME' => (bool) config('voter_auth.admin_username'),
+            'ADMIN_PASSWORD' => (bool) config('voter_auth.admin_password'),
+            'ADMIN_PASSWORD_HASH' => (bool) config('voter_auth.admin_password_hash'),
+            'JWT_SECRET' => (bool) config('voter_auth.jwt_secret'),
+            'DATABASE_AUTH' => true,
+        ]);
+    }
+
+    public function login(Request $request)
+    {
+        $data = $request->validate([
+            'username' => ['required', 'string', 'max:100'],
+            'password' => ['required', 'string', 'max:1024'],
+        ]);
+
+        $secret = (string) config('voter_auth.jwt_secret', '');
+        if ($secret === '') {
+            return response()->json(['error' => 'Admin authentication is not configured'], 500);
+        }
+
+        $envUsername = (string) config('voter_auth.admin_username', '');
+        $plain = (string) config('voter_auth.admin_password', '');
+        $legacyHash = (string) config('voter_auth.admin_password_hash', '');
+
+        // First preserve the exact existing Render environment-admin contract.
+        if ($envUsername !== '' && hash_equals($envUsername, $data['username'])) {
+            if ($plain !== '') {
+                $valid = hash_equals($plain, $data['password']);
+            } elseif ($legacyHash !== '') {
+                $valid = password_verify($data['password'], $legacyHash);
+            } else {
+                $valid = false;
+            }
+            if (!$valid) {
+                return response()->json(['error' => 'Invalid username or password'], 401);
+            }
+            return $this->issueToken($secret, $envUsername, 'admin');
+        }
+
+        // Additional accounts are stored in MySQL and use Laravel's bcrypt/argon
+        // password hasher. The password hash is never returned by any API.
+        $user = User::query()->where('username', $data['username'])->first();
+        if (!$user || !$user->is_active || !Hash::check($data['password'], $user->password)) {
+            return response()->json(['error' => 'Invalid username or password'], 401);
+        }
+
+        return $this->issueToken($secret, $user->username, $user->role, (string) $user->id);
+    }
+
+    private function issueToken(string $secret, string $username, string $role, ?string $subject = null)
+    {
+        $now = time();
+        $claims = [
+            'iat' => $now,
+            'exp' => $now + 28800,
+            'username' => $username,
+            'role' => $role,
+        ];
+        if ($subject !== null) {
+            $claims['sub'] = $subject;
+        }
+        $token = JWT::encode($claims, $secret, 'HS256');
+        return response()->json(['success' => true, 'token' => $token]);
+    }
+
+    public function me(Request $request)
+    {
+        $identity = $request->attributes->get('legacy_admin') ?? [];
+        return response()->json([
+            'authenticated' => true,
+            'username' => $identity['username'] ?? 'admin',
+            'role' => $identity['role'] ?? 'admin',
+            'user_id' => $identity['user_id'] ?? null,
+        ]);
+    }
+}
