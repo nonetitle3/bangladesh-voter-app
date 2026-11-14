@@ -6,7 +6,6 @@ services:
     dockerContext: ./php-hybrid
     dockerfilePath: ./php-hybrid/Dockerfile
     healthCheckPath: /api/health
-    port: 10000
     preDeployCommand: php artisan migrate --force
     plan: starter
     envVars:
@@ -148,7 +147,6 @@ services:
     dockerContext: ./python-worker
     dockerfilePath: ./python-worker/Dockerfile
     dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
-    port: 10000
     plan: starter
     envVars:
       - key: PORT
