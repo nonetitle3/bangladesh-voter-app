@@ -8,5 +8,5 @@ COPY app ./app
 COPY tests ./tests
 RUN useradd --create-home --uid 10001 worker && mkdir -p /var/data && chown -R worker:worker /app /var/data
 USER worker
-EXPOSE 8000
+EXPOSE 10000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
