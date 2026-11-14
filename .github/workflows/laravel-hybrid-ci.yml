@@ -15,8 +15,11 @@ on:
     branches: [laravel-hybrid-migration]
     paths:
       - 'php-hybrid/**'
+      - 'frontend/**'
       - 'python-worker/**'
       - 'scripts/backup_legacy_voter_data.py'
+      - 'docs/migration/**'
+      - 'render.yaml'
       - '.github/workflows/laravel-hybrid-ci.yml'
 
 jobs:
@@ -95,6 +98,10 @@ jobs:
           php artisan voters:import-sqlite /tmp/voters.sqlite
           php artisan voters:import-sqlite /tmp/voters.sqlite --execute
           php artisan voters:verify-sqlite /tmp/voters.sqlite
+      - name: Validate Render Laravel Docker image and entrypoint
+        run: |
+          sh -n docker-entrypoint.sh
+          docker build -t voter-laravel:ci .
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -115,6 +122,10 @@ jobs:
   backup-script:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: Validate Render Blueprint YAML and service wiring
+        run: |
+          ruby -e 'require "yaml"; cfg=YAML.load_file("render.yaml"); services=cfg.fetch("services"); abort "expected four staging services" unless services.size == 4; names=services.map { |s| s.fetch("name") }; abort "staging suffix missing" unless names.all? { |n| n.end_with?("-staging") }; abort "Laravel web service missing" unless services.any? { |s| s["name"] == "bangladesh-voter-laravel-staging" && s["type"] == "web" }; abort "Python private service missing" unless services.any? { |s| s["name"] == "bangladesh-voter-python-worker-staging" && s["type"] == "pserv" }; puts "Render Blueprint YAML and staging service wiring OK"'
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
