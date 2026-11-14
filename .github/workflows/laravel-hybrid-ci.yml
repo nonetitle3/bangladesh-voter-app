@@ -126,7 +126,6 @@ jobs:
       - name: Validate Render Blueprint YAML and service wiring
         run: |
           ruby -e 'require "yaml"; cfg=YAML.load_file("render.yaml"); services=cfg.fetch("services"); abort "expected four staging services" unless services.size == 4; names=services.map { |s| s.fetch("name") }; abort "staging suffix missing" unless names.all? { |n| n.end_with?("-staging") }; abort "Laravel web service missing" unless services.any? { |s| s["name"] == "bangladesh-voter-laravel-staging" && s["type"] == "web" }; abort "Python private service missing" unless services.any? { |s| s["name"] == "bangladesh-voter-python-worker-staging" && s["type"] == "pserv" }; puts "Render Blueprint YAML and staging service wiring OK"'
-      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
